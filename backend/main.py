@@ -1,17 +1,26 @@
 import sys
+import types
 from pathlib import Path
 
-# Add project root and backend directory to sys.path so both
-# 'backend.app...' and local module imports resolve cleanly when
-# deployed as a dedicated Vercel service with root: "backend".
-root_path = Path(__file__).resolve().parent.parent
-backend_path = Path(__file__).resolve().parent
+# Resolve current backend directory (on Vercel this is /var/task)
+backend_dir = Path(__file__).resolve().parent
 
-for p in [str(root_path), str(backend_path)]:
-    if p not in sys.path:
-        sys.path.insert(0, p)
+# If 'backend' is not already in sys.modules, register it as a virtual package
+# pointing to backend_dir. This ensures all 'from backend.app...' absolute imports
+# work seamlessly when Vercel isolates root: "backend" into /var/task.
+if "backend" not in sys.modules:
+    backend_pkg = types.ModuleType("backend")
+    backend_pkg.__path__ = [str(backend_dir)]
+    backend_pkg.__file__ = str(backend_dir / "__init__.py")
+    sys.modules["backend"] = backend_pkg
+
+if str(backend_dir) not in sys.path:
+    sys.path.insert(0, str(backend_dir))
+
+if str(backend_dir.parent) not in sys.path:
+    sys.path.insert(0, str(backend_dir.parent))
 
 from backend.app.main import app
 
-# Export ASGI application instance for Vercel
+# Export ASGI application instance for Vercel FastAPI service
 __all__ = ["app"]

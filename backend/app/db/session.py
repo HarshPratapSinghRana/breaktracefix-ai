@@ -39,15 +39,19 @@ def ensure_db_ready() -> None:
     """Ensure database tables and initial seed data are populated (serverless cold-start safe)."""
     global _db_initialized
     if not _db_initialized:
+        db = None
         try:
             init_db()
             db = SessionLocal()
             from backend.app.db.seed import seed_database
             seed_database(db)
-            db.close()
             _db_initialized = True
-        except Exception:
-            pass
+        except Exception as e:
+            import logging
+            logging.getLogger("breaktracefix").warning(f"Database initialization notice: {e}")
+        finally:
+            if db:
+                db.close()
 
 def get_db():
     """FastAPI dependency for database session."""
