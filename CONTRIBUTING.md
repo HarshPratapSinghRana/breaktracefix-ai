@@ -8,3 +8,4 @@ Thank you for your interest in contributing to BreakTraceFix AI.
 3. Verify frontend production compilation: `cd frontend && npm run build`.
 4. Ensure all new attack scenarios or policies implement defense invariants.
 5. Open a Pull Request detailing the technical changes and test results.
+

@@ -8,3 +8,4 @@ BreakTraceFix AI is a security research and runtime defense platform. If you dis
 - **Response SLA**: 48 hours for triage and verification.
 
 Please do not open public GitHub issues for undisclosed security vulnerabilities.
+

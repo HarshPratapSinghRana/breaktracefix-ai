@@ -13,8 +13,11 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
     
-    # Database URL: default to SQLite for serverless / zero-config, PostgreSQL in production
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./breaktracefix.db")
+    # Database URL: default to /tmp/breaktracefix.db on Vercel serverless, SQLite locally, or PostgreSQL
+    DATABASE_URL: str = os.getenv(
+        "DATABASE_URL",
+        "sqlite:////tmp/breaktracefix.db" if os.getenv("VERCEL") else "sqlite:///./breaktracefix.db"
+    )
     
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = [

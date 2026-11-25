@@ -17,6 +17,8 @@ engine = create_engine(
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+_db_initialized: bool = False
+
 def init_db() -> None:
     """Initialize database tables."""
     # Import all models so Base has them registered
@@ -33,8 +35,23 @@ def init_db() -> None:
     
     Base.metadata.create_all(bind=engine)
 
+def ensure_db_ready() -> None:
+    """Ensure database tables and initial seed data are populated (serverless cold-start safe)."""
+    global _db_initialized
+    if not _db_initialized:
+        try:
+            init_db()
+            db = SessionLocal()
+            from backend.app.db.seed import seed_database
+            seed_database(db)
+            db.close()
+            _db_initialized = True
+        except Exception:
+            pass
+
 def get_db():
     """FastAPI dependency for database session."""
+    ensure_db_ready()
     db: Session = SessionLocal()
     try:
         yield db

@@ -13,3 +13,4 @@ All notable changes to BreakTraceFix AI are documented in this file.
 - **Advanced Features**: MCP Security Inspector, RAG Security Auditor, AI Permission Risk Scoring.
 - **Frontend Dashboard**: 12 operational views built with React 18, TypeScript, Vite, and Tailwind CSS.
 - **Deployment**: Dual deployment architecture supporting Vercel Serverless and Docker Compose.
+
