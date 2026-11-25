@@ -1,0 +1,45 @@
+services:
+  breaktracefix-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: breaktracefix-api
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql://btf_user:btf_secure_password_2026@postgres:5432/breaktracefix_db
+      - SECRET_KEY=breaktracefix-super-secret-production-key-min-32-chars
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: breaktracefix-db
+    environment:
+      POSTGRES_USER: btf_user
+      POSTGRES_PASSWORD: btf_secure_password_2026
+      POSTGRES_DB: breaktracefix_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U btf_user -d breaktracefix_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: breaktracefix-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+

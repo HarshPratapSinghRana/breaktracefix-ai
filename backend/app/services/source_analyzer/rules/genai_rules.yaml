@@ -1,0 +1,90 @@
+rules:
+  - id: btf-genai-prompt-template-injection
+    languages: [python]
+    severity: ERROR
+    metadata:
+      cwe: "CWE-20: Improper Input Validation"
+      owasp: "LLM01: Prompt Injection"
+      title: "Direct Untrusted Input Concatenation into LLM Prompt"
+      category: "security"
+      technology: [genai, llm]
+      remediation: "Use parameterized prompt templates or strict instruction boundary delimiters instead of raw string formatting."
+    message: "Untrusted variable $INPUT is formatted directly into a prompt template, creating a Prompt Injection vulnerability."
+    patterns:
+      - pattern-either:
+          - pattern: f"...{$INPUT}..."
+          - pattern: "...".format(..., $INPUT, ...)
+          - pattern: $TEMPLATE % $INPUT
+      - pattern-inside: |
+          def $FUNC(..., $INPUT, ...):
+            ...
+            $MODEL.create(..., messages=..., ...)
+
+  - id: btf-genai-unauthorized-tool-call
+    languages: [python]
+    severity: ERROR
+    metadata:
+      cwe: "CWE-862: Missing Authorization"
+      owasp: "LLM06: Excessive Agency"
+      title: "Missing Authorization Check Prior to Tool Invocation"
+      category: "security"
+      remediation: "Invoke the Authorization Intelligence Engine before executing any privileged or destructive tool."
+    message: "Tool function $TOOL is executed without prior authorization or permission verification."
+    pattern: |
+      def execute_tool($TOOL, $ARGS):
+        ...
+        return $TOOL(**$ARGS)
+
+  - id: btf-genai-insecure-logging-secrets
+    languages: [python]
+    severity: WARNING
+    metadata:
+      cwe: "CWE-532: Insertion of Sensitive Information into Log File"
+      owasp: "LLM02: Sensitive Information Disclosure"
+      title: "Logging Raw Sensitive Parameters without Redaction"
+      category: "security"
+      remediation: "Pass data through the BreakTraceFix RedactionPipeline before writing to logs or telemetry."
+    message: "Potential sensitive token or password logged in plaintext."
+    patterns:
+      - pattern-either:
+          - pattern: logger.$LOG(..., $KEY, ...)
+          - pattern: print(..., $KEY, ...)
+      - metavariable-regex:
+          metavariable: $KEY
+          regex: (?i).*(key|token|secret|password|auth|bearer).*
+
+  - id: btf-genai-path-traversal-tool
+    languages: [python]
+    severity: ERROR
+    metadata:
+      cwe: "CWE-22: Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')"
+      owasp: "LLM06: Excessive Agency"
+      title: "Unsanitized File Path in Tool Argument"
+      category: "security"
+      remediation: "Validate path canonicalization against workspace root before opening."
+    message: "File opened with unvalidated tool argument $PATH, risking directory traversal."
+    pattern: |
+      def read_file_tool($PATH):
+        ...
+        with open($PATH, ...) as $F:
+          ...
+
+  - id: btf-genai-ssrf-web-fetch
+    languages: [python]
+    severity: ERROR
+    metadata:
+      cwe: "CWE-918: Server-Side Request Forgery (SSRF)"
+      owasp: "LLM06: Excessive Agency"
+      title: "Unrestricted Network Request via Agent Web Tool"
+      category: "security"
+      remediation: "Filter requested URLs against private RFC-1918 subnets and cloud metadata IPs (169.254.169.254)."
+    message: "Network request issued to target URL $URL without IP address or metadata blocklist check."
+    patterns:
+      - pattern-either:
+          - pattern: requests.get($URL, ...)
+          - pattern: httpx.get($URL, ...)
+          - pattern: urllib.request.urlopen($URL, ...)
+      - pattern-inside: |
+          def fetch_url(..., $URL, ...):
+            ...
+
