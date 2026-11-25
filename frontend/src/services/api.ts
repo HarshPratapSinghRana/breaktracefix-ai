@@ -15,7 +15,9 @@ import {
   SecurityReport
 } from '../types';
 
-const API_BASE = '/api/v1';
+const env = (import.meta as unknown as { env: Record<string, string | undefined> }).env || {};
+const API_BASE = (env.VITE_API_URL ? env.VITE_API_URL.replace(/\/$/, '') : '') + '/api/v1';
+const HEALTH_URL = (env.VITE_API_URL ? env.VITE_API_URL.replace(/\/$/, '') : '') + '/api/health';
 
 async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${endpoint}`, {
@@ -36,7 +38,7 @@ async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T>
 export const api = {
   // System Health
   async getHealth(): Promise<{ status: string; project: string }> {
-    const res = await fetch('/api/health');
+    const res = await fetch(HEALTH_URL);
     const data = await res.json();
     return data.data;
   },

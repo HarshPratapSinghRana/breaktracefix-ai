@@ -11,3 +11,4 @@ opentelemetry-sdk>=1.37.0
 email-validator>=2.0.0
 requests>=2.32.0
 psycopg2-binary>=2.9.9
+
